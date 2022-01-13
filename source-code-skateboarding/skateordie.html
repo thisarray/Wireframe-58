@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>skateordie</title>
+  <script src="../../jsgame0.js"></script>
+  <style type="text/css" media="screen">
+body {
+  background-color: white;
+  color: black;
+}
+.hidden {
+  display: none;
+}
+#original {
+  margin-left: 1em;
+}
+  </style>
+</head>
+
+<body>
+<section id="imageLoader" class="hidden">
+  <img class="hidden" src="images/background.png" alt="background" data-name="background">
+  <img class="hidden" src="images/fallenl.png" alt="fallenl" data-name="fallenl">
+  <img class="hidden" src="images/fallenr.png" alt="fallenr" data-name="fallenr">
+  <img class="hidden" src="images/halfpipe.png" alt="halfpipe" data-name="halfpipe">
+  <img class="hidden" src="images/skaterl.png" alt="skaterl" data-name="skaterl">
+  <img class="hidden" src="images/skaterr.png" alt="skaterr" data-name="skaterr">
+</section>
+
+<main>
+<h1>skateordie</h1>
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
+<h2>Attribution</h2>
+
+<p><a href="https://wireframe.raspberrypi.com/issues/58">Code an homage to the classic Skate Or Die!, pages 64-65, by Mark Vanstone</a>.</p>
+
+<p>Licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/legalcode">Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported</a>.</p>
+
+<p><a href="https://www.raspberrypi.com/news/code-an-homage-to-skate-or-die-wireframe-58/">Blog post of Source Code</a>.</p>
+
+<h2>Original Python code</h2>
+
+<pre id="original"><code>
+# Skate or Die
+import pgzrun
+from pygame import image
+
+skater = Actor(&#x27;skaterl&#x27;,center=(700,230), anchor=(&#x27;center&#x27;,&#x27;bottom&#x27;))
+skater.direction = &quot;l&quot;
+skater.speed = 0
+skater.switch = 0
+halfpipe = image.load(&#x27;images/halfpipe.png&#x27;)
+score = 0
+
+def draw():
+    screen.blit(&quot;background&quot;, (0, 0))
+    skater.draw()
+    screen.draw.text(&quot;SKATE OR DIE&quot;, center = (400, 40),color=(255,255,255) , owidth=0.5, ocolor=(255,0,0), fontsize=50)
+    screen.draw.text(&quot;SCORE: &quot;+str(score), center = (400, 90),color=(255,255,255) , fontsize=38)
+
+def update():
+    if skater.y &lt; 600:
+        if keyboard.left and skater.angle  &gt; -20 and skater.speed &lt;= 0:
+            skater.speed = limit(skater.speed - 0.2,-13,0)
+            skater.y -= 0.2
+        if keyboard.right and skater.angle &lt; 20 and skater.speed &gt;= 0:
+            skater.speed = limit(skater.speed + 0.2,0,13)
+            skater.y -= 0.2
+        pixel = halfpipe.get_at((int(skater.x),int(skater.y)))
+        if skater.switch &gt; 0:
+            skater.switch -= 1
+            angle = skater.angle
+            if skater.switch == 30:
+                if skater.direction == &quot;l&quot;:
+                    skater.direction = &quot;r&quot;
+                    skater.speed = 1
+                    angle = -90
+                else:
+                    skater.direction = &quot;l&quot;
+                    skater.speed = -1
+                    angle = 90
+                skater.image = &quot;skater&quot;+skater.direction
+            skater.angle = angle
+            if skater.switch &gt; 30:
+                if skater.direction == &quot;l&quot;:
+                    skater.x += 0.6
+                else:
+                    skater.x -= 0.6
+                skater.y -= 4
+            else:
+                skater.y += 3
+        else:
+            skater.x = limit(skater.x+skater.speed,20,780)
+            if skater.x &lt;= 20 or skater.x &gt;=780 and skater.speed &gt; 0:
+                skater.speed = 0
+                if skater.x &lt;= 20:
+                    skater.direction = &quot;r&quot;
+                else:
+                    skater.direction = &quot;l&quot;
+                skater.image = &quot;skater&quot;+skater.direction
+            if skater.x &gt; 400:
+                offset = 255-pixel.b
+            else:
+                offset = pixel.b-255
+            skater.angle = (offset)/3
+            yinc = (offset*(-skater.speed)/100)
+            skater.y += yinc
+            skater.speed -= (skater.angle/100)
+            skater.speed = skater.speed/1.005
+    else:
+        skater.image = &quot;fallen&quot;+skater.direction
+
+def on_key_down(key):
+    global score
+    if key.name == &quot;UP&quot;:
+        if (skater.angle &gt; 75 and skater.speed &gt; 0) or (skater.angle &lt; -75 and skater.speed &lt; 0):
+            skater.speed = 0
+            skater.switch = 60
+            score += 1000
+    if key.name == &quot;SPACE&quot; and skater.y &gt; 600:
+        skater.direction = &quot;l&quot;
+        skater.speed = 0
+        skater.pos = (720,230)
+        skater.image = &quot;skaterl&quot;
+        skater.angle = 0
+        skater.switch = 15
+        score = 0
+
+def limit(n, minn, maxn):
+    return max(min(maxn, n), minn)
+
+pgzrun.go()
+</code></pre>
+</main>
+
+<script>
+// Skate or Die
+
+var skater, halfpipe, score;
+
+function reset() {
+  skater = new Actor('skaterl');
+  skater.center = [700, 230];
+  skater.anchor = ['center', 'bottom'];
+  skater.direction = "l";
+  skater.speed = 0;
+  skater.switch = 0;
+
+  screen.blit('halfpipe', [0, 0]);
+  halfpipe = screen.getSurface();
+  score = 0;
+}
+
+function draw() {
+  screen.blit("background", [0, 0]);
+  skater.draw();
+  screen.draw.text("SKATE OR DIE", {
+    center: [400, 40],
+    color: [255, 255, 255],
+    owidth: 0.5,
+    ocolor: [255, 0, 0],
+    fontsize: 50
+  });
+  screen.draw.text("SCORE: " + score, {
+    center: [400, 90],
+    color: [255, 255, 255],
+    fontsize: 38
+  });
+}
+
+function update() {
+  if (skater.posy < 600) {
+    if (keyboard[keys.LEFT] && (skater.angle > -20) && (skater.speed <= 0)) {
+      skater.speed = limit(skater.speed - 0.2, -13, 0);
+      skater.posy -= 0.2;
+    }
+    if (keyboard[keys.RIGHT] && (skater.angle < 20) && (skater.speed >= 0)) {
+      skater.speed = limit(skater.speed + 0.2, 0, 13);
+      skater.posy -= 0.2;
+    }
+    let pixel = halfpipe.getAt(Math.trunc(skater.posx), Math.trunc(skater.posy)),
+        angle = skater.angle,
+        offset = pixel[2] - 255,
+        yinc = 0;
+    if (skater.switch > 0) {
+      skater.switch -= 1;
+      if (skater.switch === 30) {
+        if (skater.direction === "l") {
+          skater.direction = "r";
+          skater.speed = 1;
+          angle = -90;
+        }
+        else {
+          skater.direction = "l";
+          skater.speed = -1;
+          angle = 90;
+        }
+        skater.name = "skater" + skater.direction;
+      }
+      skater.angle = angle;
+      if (skater.switch > 30) {
+        if (skater.direction === "l") {
+          skater.posx += 0.6;
+        }
+        else {
+          skater.posx -= 0.6;
+        }
+        skater.posy -= 4;
+      }
+      else {
+        skater.posy += 3;
+      }
+    }
+    else {
+      skater.posx = limit(skater.posx + skater.speed, 20, 780);
+      if (((skater.posx <= 20) || (skater.posx >= 780)) && (skater.speed > 0)) {
+        skater.speed = 0;
+        if (skater.posx <= 20) {
+          skater.direction = "r";
+        }
+        else {
+          skater.direction = "l";
+        }
+        skater.name = "skater" + skater.direction;
+      }
+      if (skater.posx > 400) {
+        offset = 255 - pixel[2];
+      }
+      else {
+        offset = pixel[2] - 255;
+      }
+      skater.angle = offset / 3;
+      yinc = offset * (-skater.speed) / 100;
+      skater.posy += yinc;
+      skater.speed -= skater.angle / 100;
+      skater.speed = skater.speed / 1.005;
+    }
+  }
+  else {
+    skater.name = "fallen" + skater.direction;
+  }
+}
+
+function on_key_down(key) {
+  if (key === keys.UP) {
+    if (((skater.angle > 75) && (skater.speed > 0)) || ((skater.angle < -75) && (skater.speed < 0))) {
+      skater.speed = 0;
+      skater.switch = 60;
+      score += 1000;
+    }
+  }
+  if ((key === keys.SPACE) && (skater.posy > 600)) {
+    skater.direction = "l";
+    skater.speed = 0;
+    skater.pos = [720, 230];
+    skater.name = "skaterl";
+    skater.angle = 0;
+    skater.switch = 15;
+    score = 0;
+  }
+}
+
+function limit(n, minn, maxn) {
+  return Math.max(Math.min(maxn, n), minn);
+}
+
+window.addEventListener('load', (event) => {
+  images.LOAD('#imageLoader img');
+  // Non-standard order for Surface
+  screen.set_mode('#screen', '#reset', '#pause');
+  reset();
+  screen.draw.playButton();
+});
+</script>
+</body>
+
+</html>
